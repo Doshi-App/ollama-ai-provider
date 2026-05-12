@@ -117,6 +117,34 @@ describe('generateText + Output.object()', () => {
     expect(sys.content).toContain('Why this rating');
   });
 
+  it('instructs the model to emit JSON in the response, not in reasoning', async () => {
+    let body: any;
+    server.use(
+      http.post('https://ollama.com/api/chat', async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json({
+          model: 'm',
+          message: { role: 'assistant', content: '{"rating":5,"reason":"ok"}' },
+          done: true,
+          done_reason: 'stop',
+        });
+      }),
+    );
+
+    const ollama = createOllama({ apiKey: 'k' });
+    await generateText({
+      model: ollama('m'),
+      output: Output.object({ schema: RatingSchema }),
+      prompt: 'rate',
+    });
+
+    const sys = body.messages.find((m: any) => m.role === 'system');
+    // The instruction must steer reasoning-heavy models (gpt-oss, qwen3-thinking)
+    // away from emitting the JSON inside their <think> / message.thinking block.
+    expect(sys.content.toLowerCase()).toMatch(/respond.*json|return.*json|output.*json/);
+    expect(sys.content.toLowerCase()).toMatch(/reasoning|thinking|<think>/);
+  });
+
   it('sends the JSON Schema as Ollama native format field', async () => {
     let body: any;
     server.use(
@@ -288,6 +316,63 @@ describe('streamText basics', () => {
     }
 
     expect(await result.output).toEqual({ rating: 7, reason: 'meh' });
+  });
+});
+
+describe('Reasoning (Ollama message.thinking)', () => {
+  it('surfaces message.thinking as reasoning content on generateText result', async () => {
+    server.use(
+      http.post('https://ollama.com/api/chat', () =>
+        HttpResponse.json({
+          model: 'm',
+          message: {
+            role: 'assistant',
+            thinking: 'The user wants a rating. Hello is simple, score it low.',
+            content: '{"rating":1,"reason":"trivial"}',
+          },
+          done: true,
+          done_reason: 'stop',
+        }),
+      ),
+    );
+
+    const ollama = createOllama({ apiKey: 'k' });
+    const result = await generateText({
+      model: ollama('m'),
+      output: Output.object({ schema: RatingSchema }),
+      prompt: 'Rate Hello',
+    });
+
+    expect(result.output).toEqual({ rating: 1, reason: 'trivial' });
+    expect(result.reasoningText).toContain('The user wants a rating');
+  });
+
+  it('streams message.thinking deltas as reasoning parts', async () => {
+    server.use(
+      http.post('https://ollama.com/api/chat', () =>
+        ndjsonResponse([
+          { model: 'm', message: { thinking: 'Let me ' }, done: false },
+          { model: 'm', message: { thinking: 'think about this.' }, done: false },
+          { model: 'm', message: { content: '{"rating":' }, done: false },
+          { model: 'm', message: { content: '1,"reason":"x"}' }, done: true, done_reason: 'stop' },
+        ]),
+      ),
+    );
+
+    const ollama = createOllama({ apiKey: 'k' });
+    const result = streamText({
+      model: ollama('m'),
+      output: Output.object({ schema: RatingSchema }),
+      prompt: 'rate',
+    });
+
+    // drain
+    for await (const _ of result.textStream) {
+      /* consume */
+    }
+
+    expect(await result.reasoningText).toBe('Let me think about this.');
+    expect(await result.output).toEqual({ rating: 1, reason: 'x' });
   });
 });
 

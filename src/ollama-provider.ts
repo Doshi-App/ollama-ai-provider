@@ -1,4 +1,5 @@
 import type {
+  JSONSchema7,
   LanguageModelV3,
   LanguageModelV3CallOptions,
   LanguageModelV3FinishReason,
@@ -28,6 +29,7 @@ interface OllamaChatResponse {
   message: {
     role: string;
     content: string;
+    thinking?: string;
   };
   done: boolean;
   done_reason?: string;
@@ -40,6 +42,7 @@ interface OllamaStreamChunk {
   message?: {
     role?: string;
     content?: string;
+    thinking?: string;
   };
   done: boolean;
   done_reason?: string;
@@ -134,8 +137,14 @@ class OllamaLanguageModel implements LanguageModelV3 {
       ? jsonRepairText(ollamaResponse.message.content)
       : ollamaResponse.message.content;
 
+    const content: LanguageModelV3GenerateResult['content'] = [];
+    if (ollamaResponse.message.thinking) {
+      content.push({ type: 'reasoning', text: ollamaResponse.message.thinking });
+    }
+    content.push({ type: 'text', text });
+
     return {
-      content: [{ type: 'text', text }],
+      content,
       finishReason: mapOllamaFinishReason(ollamaResponse.done_reason),
       usage: buildUsage(ollamaResponse.prompt_eval_count, ollamaResponse.eval_count),
       warnings,
@@ -159,12 +168,15 @@ class OllamaLanguageModel implements LanguageModelV3 {
     const reader = response.body!.getReader();
     const decoder = new TextDecoder();
     const textId = generateId();
+    const reasoningId = generateId();
 
     const stream = new ReadableStream<LanguageModelV3StreamPart>({
       async start(controller) {
         controller.enqueue({ type: 'stream-start', warnings });
 
         let textStarted = false;
+        let textEnded = false;
+        let reasoningStarted = false;
         let buffered = '';
         let promptTokens: number | undefined;
         let completionTokens: number | undefined;
@@ -172,8 +184,20 @@ class OllamaLanguageModel implements LanguageModelV3 {
 
         const startTextIfNeeded = () => {
           if (!textStarted) {
+            // Close out reasoning before text begins so consumers see the right
+            // ordering (reasoning → answer).
+            if (reasoningStarted) {
+              controller.enqueue({ type: 'reasoning-end', id: reasoningId });
+              reasoningStarted = false;
+            }
             controller.enqueue({ type: 'text-start', id: textId });
             textStarted = true;
+          }
+        };
+        const startReasoningIfNeeded = () => {
+          if (!reasoningStarted && !textStarted) {
+            controller.enqueue({ type: 'reasoning-start', id: reasoningId });
+            reasoningStarted = true;
           }
         };
 
@@ -203,6 +227,16 @@ class OllamaLanguageModel implements LanguageModelV3 {
                 completionTokens = chunk.eval_count;
               }
 
+              const thinkingDelta = chunk.message?.thinking;
+              if (thinkingDelta && !textStarted) {
+                startReasoningIfNeeded();
+                controller.enqueue({
+                  type: 'reasoning-delta',
+                  id: reasoningId,
+                  delta: thinkingDelta,
+                });
+              }
+
               const delta = chunk.message?.content;
               if (delta) {
                 if (isJsonMode) {
@@ -219,8 +253,13 @@ class OllamaLanguageModel implements LanguageModelV3 {
                   startTextIfNeeded();
                   controller.enqueue({ type: 'text-delta', id: textId, delta: repaired });
                 }
-                if (textStarted) {
+                if (reasoningStarted) {
+                  controller.enqueue({ type: 'reasoning-end', id: reasoningId });
+                  reasoningStarted = false;
+                }
+                if (textStarted && !textEnded) {
                   controller.enqueue({ type: 'text-end', id: textId });
+                  textEnded = true;
                 }
                 controller.enqueue({
                   type: 'finish',
@@ -278,7 +317,7 @@ class OllamaLanguageModel implements LanguageModelV3 {
     const isJsonMode = responseFormat?.type === 'json' && responseFormat.schema != null;
 
     if (isJsonMode && responseFormat?.type === 'json' && responseFormat.schema) {
-      const jsonInstruction = jsonSchemaToInstruction(responseFormat.schema);
+      const jsonInstruction = buildJsonInstructionBlock(responseFormat.schema);
       systemPrompt = systemPrompt
         ? `${systemPrompt}\n\n${jsonInstruction}`
         : jsonInstruction;
@@ -338,6 +377,29 @@ function extractTextContent(content: unknown): {
   return { text: parts.join(''), warnings };
 }
 
+/**
+ * Wraps the schema-derived shape with directives that:
+ *   1. Tell the model to respond with JSON (Ollama's `format` already enforces
+ *      this server-side, but a reminder reduces "empty content" failures with
+ *      reasoning-heavy models like gpt-oss that otherwise dump the answer into
+ *      their internal `<thinking>` block).
+ *   2. Show the expected shape.
+ *
+ * Kept here (not in json-schema-to-instruction) because it's a provider-level
+ * concern about Ollama Cloud / OpenAI-style chat completion behavior; the
+ * shape renderer stays pure.
+ */
+function buildJsonInstructionBlock(schema: JSONSchema7): string {
+  const shape = jsonSchemaToInstruction(schema);
+  return [
+    'Respond with a JSON object that matches the schema below.',
+    'Put the JSON in your reply content — not in <think>, reasoning, or any analysis block.',
+    'Return only the JSON object, no prose, no markdown fences.',
+    '',
+    shape,
+  ].join('\n');
+}
+
 function mapOllamaFinishReason(
   reason: string | undefined
 ): LanguageModelV3FinishReason {
@@ -385,6 +447,7 @@ function parseOllamaResponse(data: unknown): OllamaChatResponse {
     message: {
       role: String(message?.role ?? 'assistant'),
       content,
+      thinking: typeof message?.thinking === 'string' ? message.thinking : undefined,
     },
     done: Boolean(obj?.done),
     done_reason: typeof obj?.done_reason === 'string' ? obj.done_reason : undefined,
