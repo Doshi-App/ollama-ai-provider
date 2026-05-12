@@ -67,12 +67,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/doshi-app/ollama-ai-provider.git"
+    "url": "git+https://github.com/Doshi-App/ollama-ai-provider.git"
   },
   "bugs": {
-    "url": "https://github.com/doshi-app/ollama-ai-provider/issues"
+    "url": "https://github.com/Doshi-App/ollama-ai-provider/issues"
   },
-  "homepage": "https://github.com/doshi-app/ollama-ai-provider#readme",
+  "homepage": "https://github.com/Doshi-App/ollama-ai-provider#readme",
   "publishConfig": {
     "access": "public"
   }
