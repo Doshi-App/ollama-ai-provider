@@ -119,7 +119,7 @@ async function testStreaming() {
 }
 
 async function main() {
-  console.log('Smoke test for @doshi/ollama');
+  console.log('Smoke test for @doshi/ollama-ai-provider');
   console.log('API Key:', OLLAMA_API_KEY!.slice(0, 8) + '...');
   await testInstruction();
   await testPlainGenerate();

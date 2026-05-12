@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Initial release of `@doshi/ollama` — Ollama provider for Vercel AI SDK v6.
+- Initial release of `@doshi/ollama-ai-provider` — Ollama provider for Vercel AI SDK v6.
 - `createOllama()` factory and `ollama` singleton implementing `LanguageModelV3`.
 - Automatic JSON-instruction injection when `Output.object({ schema })` is used:
   renders the schema as a human-readable instruction (with `.describe()`

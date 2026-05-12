@@ -1,5 +1,5 @@
 {
-  "name": "@doshi/ollama",
+  "name": "@doshi/ollama-ai-provider",
   "version": "0.1.0",
   "description": "Vercel AI SDK v6 Ollama provider with auto JSON instruction injection",
   "type": "module",
@@ -67,13 +67,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/doshi-app/ollama.git"
+    "url": "git+https://github.com/doshi-app/ollama-ai-provider.git"
   },
   "bugs": {
-    "url": "https://github.com/doshi-app/ollama/issues"
+    "url": "https://github.com/doshi-app/ollama-ai-provider/issues"
   },
-  "homepage": "https://github.com/doshi-app/ollama#readme",
+  "homepage": "https://github.com/doshi-app/ollama-ai-provider#readme",
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   }
 }

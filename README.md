@@ -1,4 +1,4 @@
-# @doshi/ollama
+# @doshi/ollama-ai-provider
 
 Ollama provider for the [Vercel AI SDK](https://sdk.vercel.ai) (v6) with
 automatic JSON-instruction injection and response repair.
@@ -9,7 +9,7 @@ Use it anywhere you'd use `@ai-sdk/openai`, `@ai-sdk/anthropic`, or
 
 ```ts
 import { generateText, Output } from 'ai';
-import { ollama } from '@doshi/ollama';
+import { ollama } from '@doshi/ollama-ai-provider';
 import { z } from 'zod';
 import { zodSchema } from '@ai-sdk/provider-utils';
 
@@ -33,9 +33,9 @@ console.log(output); // { rating: 2, reason: '...' }
 ## Install
 
 ```sh
-pnpm add @doshi/ollama ai
+pnpm add @doshi/ollama-ai-provider ai
 # or
-npm install @doshi/ollama ai
+npm install @doshi/ollama-ai-provider ai
 ```
 
 ## Why this exists
@@ -65,7 +65,7 @@ object, reliably, with the same call signature you'd use for OpenAI.
 ## Configuration
 
 ```ts
-import { createOllama } from '@doshi/ollama';
+import { createOllama } from '@doshi/ollama-ai-provider';
 
 const ollama = createOllama({
   baseURL: 'https://ollama.com',     // default

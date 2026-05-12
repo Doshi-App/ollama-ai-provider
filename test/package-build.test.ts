@@ -54,23 +54,26 @@ describe('end-to-end consumer install', () => {
 
   beforeAll(() => {
     execSync('pnpm pack', { cwd: PKG_DIR, stdio: 'pipe' });
-    const { version } = pkgJson();
-    const tarball = join(PKG_DIR, `doshi-ollama-${version}.tgz`);
-    tmpDir = mkdtempSync(join(tmpdir(), 'doshi-ollama-pkg-'));
+    const { name, version } = pkgJson();
+    // pnpm pack tarball naming: '@scope/foo' → 'scope-foo-<version>.tgz'
+    const tarballName = `${name.replace(/^@/, '').replace('/', '-')}-${version}.tgz`;
+    const tarball = join(PKG_DIR, tarballName);
+    tmpDir = mkdtempSync(join(tmpdir(), 'pkg-build-test-'));
     writeFileSync(
       join(tmpDir, 'package.json'),
       JSON.stringify({ name: 'consumer', version: '1.0.0', private: true }),
     );
-    execSync(
-      `npm install ${tarball} --no-audit --no-fund --silent`,
-      { cwd: tmpDir, stdio: 'pipe' },
-    );
+    execSync(`npm install ${tarball} --no-audit --no-fund --silent`, {
+      cwd: tmpDir,
+      stdio: 'pipe',
+    });
   }, 60_000);
 
   it('an ESM consumer can import { createOllama, ollama, jsonSchemaToInstruction }', () => {
+    const { name } = pkgJson();
     writeFileSync(
       join(tmpDir, 'use.mjs'),
-      `import * as m from '@doshi/ollama';
+      `import * as m from '${name}';
        const keys = Object.keys(m).sort().join(',');
        if (!keys.includes('createOllama')) throw new Error('missing createOllama, got: ' + keys);
        if (!keys.includes('jsonSchemaToInstruction')) throw new Error('missing jsonSchemaToInstruction, got: ' + keys);
@@ -82,9 +85,10 @@ describe('end-to-end consumer install', () => {
   });
 
   it('a CJS consumer can require the package', () => {
+    const { name } = pkgJson();
     writeFileSync(
       join(tmpDir, 'use.cjs'),
-      `const m = require('@doshi/ollama');
+      `const m = require('${name}');
        if (typeof m.createOllama !== 'function') throw new Error('createOllama missing');
        if (typeof m.jsonSchemaToInstruction !== 'function') throw new Error('jsonSchemaToInstruction missing');
        console.log('OK');`,

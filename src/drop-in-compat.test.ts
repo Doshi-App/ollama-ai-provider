@@ -2,7 +2,7 @@
  * Drop-in compatibility tests.
  *
  * These verify that consumers can swap `@ai-sdk/openai` (or any other AI SDK v6
- * provider) for `@doshi/ollama` and get identical observable behavior, using the
+ * provider) for `@doshi/ollama-ai-provider` and get identical observable behavior, using the
  * canonical AI SDK v6 patterns:
  *
  *   const { output } = await generateText({
