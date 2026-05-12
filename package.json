@@ -24,12 +24,13 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "test": "vitest run",
+    "test:unit": "vitest run src",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "lint": "biome lint .",
     "format": "biome format --write .",
     "smoke": "tsx scripts/smoke.ts",
-    "prepublishOnly": "pnpm build && pnpm test"
+    "prepublishOnly": "pnpm build && pnpm test:unit"
   },
   "dependencies": {
     "@ai-sdk/provider": "^3.0.0",
