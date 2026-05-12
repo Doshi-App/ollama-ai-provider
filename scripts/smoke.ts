@@ -86,7 +86,7 @@ async function testPlainGenerate() {
 }
 
 async function testStructured() {
-  console.log('\n[3/4] generateText + Output.object() (the PRD pattern)');
+  console.log('\n[3/4] generateText + Output.object() (structured output)');
   const result = await generateText({
     model: ollama('gpt-oss:20b-cloud'),
     output: Output.object({ schema: RatingSchema }),

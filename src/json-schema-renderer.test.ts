@@ -273,11 +273,11 @@ describe('jsonSchemaToInstruction', () => {
     expect(result).toContain('boolean');
   });
 
-  it('renders a Doshi-style scenario emission schema as a stable snapshot', () => {
-    // Mirrors the shape Zod produces for the draftEmissions schema described in
-    // the PRD (line 267+). This snapshot is the contract between the package and
-    // the Doshi server's manually written *_JSON_INSTRUCTION constants — if it
-    // regresses, the auto-injected instruction will diverge from prod prompts.
+  it('renders a complex emissions-style schema as a stable snapshot', () => {
+    // Snapshots a Zod-produced JSON Schema for a nested, discriminated-union
+    // structure with array-of-object items, descriptions, and string enums.
+    // Acts as a contract: if it regresses, the auto-injected instruction will
+    // silently diverge from what consumers see today.
     const schema = {
       type: 'object' as const,
       properties: {
