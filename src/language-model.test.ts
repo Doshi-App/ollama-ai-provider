@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { generateText } from 'ai';
-import { createOllama } from './ollama-provider';
+import { createOllama } from './provider';
 
 const server = setupServer();
 

@@ -54,13 +54,15 @@ describe('end-to-end consumer install', () => {
 
   beforeAll(() => {
     execSync('pnpm pack', { cwd: PKG_DIR, stdio: 'pipe' });
+    const { version } = pkgJson();
+    const tarball = join(PKG_DIR, `doshi-ollama-${version}.tgz`);
     tmpDir = mkdtempSync(join(tmpdir(), 'doshi-ollama-pkg-'));
     writeFileSync(
       join(tmpDir, 'package.json'),
       JSON.stringify({ name: 'consumer', version: '1.0.0', private: true }),
     );
     execSync(
-      `npm install ${join(PKG_DIR, 'doshi-ollama-0.0.0.tgz')} --no-audit --no-fund --silent`,
+      `npm install ${tarball} --no-audit --no-fund --silent`,
       { cwd: tmpDir, stdio: 'pipe' },
     );
   }, 60_000);

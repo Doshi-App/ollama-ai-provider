@@ -18,7 +18,7 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { generateText, Output, streamText } from 'ai';
 import { jsonSchema } from '@ai-sdk/provider-utils';
-import { createOllama } from './ollama-provider';
+import { createOllama } from './provider';
 
 const server = setupServer();
 

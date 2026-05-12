@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { jsonSchemaToInstruction } from './json-schema-to-instruction';
+import { jsonSchemaToInstruction } from './json-schema-renderer';
 
 describe('jsonSchemaToInstruction', () => {
   it('generates simple object instruction with primitives', () => {

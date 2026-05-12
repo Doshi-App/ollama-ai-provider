@@ -1,6 +1,6 @@
 {
   "name": "@doshi/ollama",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Vercel AI SDK v6 Ollama provider with auto JSON instruction injection",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -15,7 +15,10 @@
   },
   "sideEffects": false,
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsup",
@@ -25,7 +28,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "biome lint .",
     "format": "biome format --write .",
-    "smoke": "tsx smoke-test.ts"
+    "smoke": "tsx scripts/smoke.ts",
+    "prepublishOnly": "pnpm build && pnpm test"
   },
   "dependencies": {
     "@ai-sdk/provider": "^3.0.0",
@@ -46,12 +50,30 @@
     "typescript": "^5.5.0",
     "vitest": "^3.0.0"
   },
+  "engines": {
+    "node": ">=18"
+  },
   "keywords": [
     "ollama",
     "ai",
-    "vercel",
     "ai-sdk",
-    "llm"
+    "vercel-ai",
+    "llm",
+    "structured-output",
+    "json-mode",
+    "language-model"
   ],
-  "license": "MIT"
+  "author": "Doshi",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/doshi-app/ollama.git"
+  },
+  "bugs": {
+    "url": "https://github.com/doshi-app/ollama/issues"
+  },
+  "homepage": "https://github.com/doshi-app/ollama#readme",
+  "publishConfig": {
+    "access": "restricted"
+  }
 }

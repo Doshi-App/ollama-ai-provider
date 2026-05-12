@@ -12,8 +12,7 @@ config();
 
 import { generateText, streamText, Output } from 'ai';
 import { jsonSchema } from '@ai-sdk/provider-utils';
-import { createOllama } from './src/ollama-provider';
-import { jsonSchemaToInstruction } from './src/json-schema-to-instruction';
+import { createOllama, jsonSchemaToInstruction } from '../src';
 
 const OLLAMA_API_KEY = process.env.OLLAMA_API_KEY;
 
