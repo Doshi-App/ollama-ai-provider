@@ -1,0 +1,14 @@
+node_modules/
+dist/
+*.tgz
+
+.env
+.env.local
+.env.*.local
+
+.DS_Store
+
+# editor / OS
+.vscode/
+.idea/
+*.swp
